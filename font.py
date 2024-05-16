@@ -300,7 +300,15 @@ class Font:
         if size == 1: w = 6
         if size == 2: w = 11
         if size == 3: w = 17 
-        gap = int((width - len(txt) * w)/2) + o
+        gap = (width - len(txt) * w)//2 + o
         Font.prnt_st(lcd,txt,gap,y,size,r,g,b)
+
+    @staticmethod
+    def rght_st(lcd,asci,xx,yy,sz,r,g,b):
+        if sz == 1: w = 6
+        if sz == 2: w = 11
+        if sz == 3: w = 17
+        xo = xx - len(asci) * w
+        Font.prnt_st(lcd,asci,xo,yy,sz,r,g,b)
 
 # =========== End of font support routines ===========
