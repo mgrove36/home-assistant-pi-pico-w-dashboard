@@ -140,6 +140,9 @@ class App:
     def __updateMediaPositionBar(self, d):
         if (d["media_position"] != None and d["media_duration"] != None and d["media_duration"] != 0):
             for x in range (0, (self.lcd.width * d["media_position"])//d["media_duration"]):
+                self.lcd.pixel(x, self.lcd.height - 5, self.lcd.white)
+                self.lcd.pixel(x, self.lcd.height - 4, self.lcd.white)
+                self.lcd.pixel(x, self.lcd.height - 3, self.lcd.white)
                 self.lcd.pixel(x, self.lcd.height - 2, self.lcd.white)
                 self.lcd.pixel(x, self.lcd.height - 1, self.lcd.white)
                 self.lcd.pixel(x, self.lcd.height, self.lcd.white)
