@@ -57,16 +57,36 @@ class App:
 
     def __manageButtons(self) -> None:
         while (True):
-            if (self.lcd.keyA["p"].value() == 0): self.lcd.keyA["v"] = True
-            if (self.lcd.keyB["p"].value() == 0): self.lcd.keyB["v"] = True
-            if (self.lcd.keyX["p"].value() == 0): self.lcd.keyX["v"] = True
-            if (self.lcd.keyY["p"].value() == 0): self.lcd.keyY["v"] = True
-            if (self.lcd.right["p"].value() == 0): self.lcd.right["v"] = True
-            if (self.lcd.left["p"].value() == 0): self.lcd.left["v"] = True
+            a = False
+            if (self.lcd.keyA["p"].value() == 0):
+                self.lcd.keyA["v"] = True
+                a = True
+            if (self.lcd.keyB["p"].value() == 0):
+                self.lcd.keyB["v"] = True
+                a = True
+            if (self.lcd.keyX["p"].value() == 0):
+                self.lcd.keyX["v"] = True
+                a = True
+            if (self.lcd.keyY["p"].value() == 0):
+                self.lcd.keyY["v"] = True
+                a = True
+            if (self.lcd.right["p"].value() == 0):
+                self.lcd.right["v"] = True
+                a = True
+            if (self.lcd.left["p"].value() == 0):
+                self.lcd.left["v"] = True
+                a = True
             if (self.lcd.up["p"].value() == 0):
                 self.lcd.up["v"] = True
-            if (self.lcd.down["p"].value() == 0): self.lcd.down["v"] = True
-            if (self.lcd.ctrl["p"].value() == 0): self.lcd.ctrl["v"] = True
+                a = True
+            if (self.lcd.down["p"].value() == 0):
+                self.lcd.down["v"] = True
+                a = True
+            if (self.lcd.ctrl["p"].value() == 0):
+                self.lcd.ctrl["v"] = True
+                a = True
+            if (a):
+                sleep(0.2)
     
     def __changeScreen(self) -> bool:
         orig = self.screen
@@ -246,7 +266,6 @@ class App:
             gc.collect()
             if (time.localtime()[3] == 0): ntptime.settime()
             changed = not started or self.__changeScreen()
-            # TODO: make buttons not work until certain delay after release, as holding button too long actions it twice
             if (not started): started = True
             # if the screen has changed, redraw the whole screen
             if (changed):
