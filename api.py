@@ -1,6 +1,6 @@
 from requests import get, post
 from gc import collect
-from time import mktime, localtime
+from time import mktime, time
 from env import HASS_URL, TOKEN
 
 def getReq(endpoint) -> dict:
@@ -55,7 +55,7 @@ def getMediaPlayerData(entity_id: str) -> dict:
     if ("media_position_updated_at" in (dict)(response["attributes"])):
         dts = response["attributes"]["media_position_updated_at"]
         t = mktime((int(dts[0:4]), int(dts[5:7]), int(dts[8:10]), int(dts[11:13]) + int(dts[27:29]), int(dts[14:16]) + int(dts[30:31]), int(dts[17:19]), 0, 0))
-        p += mktime(localtime()) - t
+        p += time() - t
     return {
         "playing": response["state"] in ["on", "playing", "buffering"],
         "shuffle": response["attributes"]["shuffle"] if e and "shuffle" in response["attributes"] else False,
