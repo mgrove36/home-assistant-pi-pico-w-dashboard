@@ -9,6 +9,8 @@ from env import *
 from utils import Utils
 import _thread
 import bmp_file_reader as bmpr
+import ntptime
+import time
 
 class App:
     def __init__(self) -> None:
@@ -37,6 +39,10 @@ class App:
         Font.cntr_st(self.lcd, self.lcd.width, "Booting...", 120, 2, 150, 150, 150)
         self.lcd.show()
         self.__connect()
+        print("Local time before synchronization：%s" %str(time.localtime()))
+        ntptime.host = "1.europe.pool.ntp.org"
+        ntptime.settime()
+        print("Local time after synchronization：%s" %str(time.localtime()))
 
     def __resetButtonStatuses(self) -> None:
         self.lcd.keyA["v"] = False
@@ -74,18 +80,19 @@ class App:
             else:
                 self.screen -= 1
         self.__resetButtonStatuses()
-        change = self.screen == orig
+        change = self.screen != orig
         if (change):
             self.scr_vals = {}
 
         return change
     
-    def __displayLightEntity(self, i: int, w: int, h: int, xo: int, yo: int, d) -> None:
+    def __displayLightEntity(self, i: int, w: int, h: int, xo: int, yo: int, n: str, d) -> None:
         self.scr_vals[i] = d
+        print("Checking if light is on")
         # if the light is turned on, display the filled-in lightbulb icon in the colour of the light, centrally in the light's grid square
         if (d["on"]):
             color = Utils.colour(d["rgb_color"][0], d["rgb_color"][1], d["rgb_color"][2])
-            with open("lightbulb-on.bmp", "rb") as file_handle:
+            with open("images/lightbulb-on.bmp", "rb") as file_handle:
                 reader = bmpr.BMPFileReader(file_handle)
                 img_height = reader.get_height()
                 x_offset = w//2 + xo - reader.get_width()//2
@@ -96,13 +103,14 @@ class App:
                         r = d["rgb_color"][0] if (color.red) != 0 else 0
                         g = d["rgb_color"][1] if (color.green) != 0 else 0
                         b = d["rgb_color"][2] if (color.blue) != 0 else 0
-                        print(col_i, row_i, r, g, b)
                         if (color.red != 0 or color.green != 0 or color.blue != 0):
-                            self.lcd.pixel(col_i + x_offset, row_i + y_offset, color)
+                            self.lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(r,g,b))
         # otherwise display the outline lightbulb icon in grey, centrally in the light's grid square
         else:
             color = Utils.colour(80, 80, 80)
-            with open("lightbulb-off.bmp", "rb") as file_handle:
+            print("Opening file...")
+            with open("images/lightbulb-off.bmp", "rb") as file_handle:
+                print("Opened file")
                 reader = bmpr.BMPFileReader(file_handle)
                 img_height = reader.get_height()
                 x_offset = w//2 + xo - reader.get_width()//2
@@ -110,11 +118,10 @@ class App:
                 for row_i in range(0, reader.get_height()):
                     row = reader.get_row(row_i)
                     for col_i, color in enumerate(row):
-                        print(col_i, row_i, color.red, color.green, color.blue)
                         if (color.red != 0 or color.green != 0 or color.blue != 0):
-                            self.lcd.pixel(col_i + x_offset, row_i + y_offset, color)
+                            self.lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(color.red, color.green, color.blue))
         # display the name of the light 8px below the lightbulb icon
-        Font.cntr_st(self.lcd, w, d["friendly_name"], y_offset + img_height + 8, 3, 200, 200, 200, xo)
+        Font.cntr_st(self.lcd, w, n, y_offset + img_height + 8, 2, 220, 220, 220, xo)
     
     def __displayLightsScreen(self, d=None) -> None:
         # display up to four lights as defined in env.py
@@ -124,25 +131,19 @@ class App:
         # for each defined entity (up to a max total of 4), display its data in a 2x2 grid
         if (d == None): d = []
         for i in range(0, min(entities, 4)):
-            if (len(d) == i): d[i] = self.api.getLightData(SCREENS[self.screen]["entities"][i])
-            self.__displayLightEntity(i, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2 * (i % 2), self.lcd.height//2 * (i//2), d[i])
+            if (len(d) == i): d.append(self.api.getLightData(SCREENS[self.screen]["entities"][i]["id"]))
+            self.__displayLightEntity(i, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2 * (i % 2), self.lcd.height//2 * (i//2), SCREENS[self.screen]["entities"][i]["name"], d[i])
         self.lcd.show()
-        # if (entities < 1): return
-        # self.__displayLightEntity(0, self.lcd.width//2, self.lcd.height//2, 0, 0)
-        # if (entities < 2): return
-        # self.__displayLightEntity(1, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2, 0)
-        # if (entities < 3): return
-        # self.__displayLightEntity(2, self.lcd.width//2, self.lcd.height//2, 0, self.lcd.height//2)
-        # if (entities < 4): return
-        # self.__displayLightEntity(3, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2, self.lcd.height//2)
         # TODO: handle buttons
 
     def __updateMediaPositionBar(self, d):
-        if (d["media_position"] != None and d["media_duration"] != None):
-            for x in range (0, d["media_position"]//d["media_duration"]):
-                self.lcd.pixel(x, 176, self.lcd.white)
-                self.lcd.pixel(x, 177, self.lcd.white)
-                self.lcd.pixel(x, 178, self.lcd.white)
+        print("Redrawing media progress bar")
+        if (d["media_position"] != None and d["media_duration"] != None and d["media_duration"] != 0):
+            print(f"Progress is {(self.lcd.width * d["media_position"])//d["media_duration"]} for pos {d["media_position"]} and dur {d["media_duration"]}")
+            for x in range (0, (self.lcd.width * d["media_position"])//d["media_duration"]):
+                self.lcd.pixel(x, self.lcd.height - 2, self.lcd.white)
+                self.lcd.pixel(x, self.lcd.height - 1, self.lcd.white)
+                self.lcd.pixel(x, self.lcd.height, self.lcd.white)
 
     def __displayMediaScreen(self, d=None) -> None:
         self.lcd.fill(self.lcd.black)
@@ -159,10 +160,9 @@ class App:
         if (d["media_duration"] != None):
             mins = d["media_duration"] // 60
             secs = d["media_duration"] % 60
-            # TODO: make this work when time string is too long to fit
-            Font.prnt_st(self.lcd, mins + ":" + secs, 180, 170, 1, 150, 150, 150)
-        Font.cntr_st(self.lcd, self.lcd.width, d["media_title"], 180, 3, 255, 255, 255)
-        Font.cntr_st(self.lcd, self.lcd.width, d["media_artist"], 200, 2, 255, 255, 255)
+            Font.rght_st(self.lcd, f"{mins}:{secs}", self.lcd.width, self.lcd.height - 16, 1, 180, 180, 180)
+        Font.cntr_st(self.lcd, self.lcd.width, d["media_title"], self.lcd.height - 72, 3, 255, 255, 255)
+        Font.cntr_st(self.lcd, self.lcd.width, d["media_artist"], self.lcd.height - 96, 2, 255, 255, 255)
         self.lcd.show()
         # TODO: display album art
         # TODO: handle button presses for volume and changing tracks
@@ -178,9 +178,10 @@ class App:
         # for each light to be displayed
         for i in range(0, e):
             # if its settings have changed, re-draw them without clearing the display
-            d = self.api.getLightData(SCREENS[self.screen]["entities"][i])
+            d = self.api.getLightData(SCREENS[self.screen]["entities"][i]["id"])
             if (d != self.scr_vals[i]):
-                self.__displayLightEntity(i, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2 * (i % 2), self.lcd.height//2 * (i//2), d[i])    
+                self.__displayLightEntity(i, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2 * (i % 2), self.lcd.height//2 * (i//2), SCREENS[self.screen]["entities"][i]["name"], d[i])
+        # TODO: double button press to select a light, then up/down to change brightness? and single button click to turn on/off?
         self.lcd.show()      
 
     def __updateMediaScreen(self) -> None:
@@ -194,25 +195,25 @@ class App:
             self.__displayMediaScreen(d)
 
     def __manageScreen(self) -> None:
+        started = False
         while (True):
             gc.collect()
-            changed = self.__changeScreen()
+            changed = not started or self.__changeScreen()
+            started = True
             # if the screen has changed, redraw the whole screen
             if (changed):
-                match SCREENS[self.screen]["type"]:
-                    case 0:
-                        self.__displayLightsScreen()
-                    case 1:
-                        self.__displayMediaScreen()
-                    case _:
-                        self.__displayUnknownScreen()
+                if (SCREENS[self.screen]["type"] == 0):
+                    self.__displayLightsScreen()
+                elif (SCREENS[self.screen]["type"] == 1):
+                    self.__displayMediaScreen()
+                else:
+                    self.__displayUnknownScreen()
             # otherwise minimise the number of pixels being changed
             else:
-                match SCREENS[self.screen]["type"]:
-                    case 0:
-                        self.__updateLightsScreen()
-                    case 1:
-                        self.__updateMediaScreen()
+                if (SCREENS[self.screen]["type"] == 0):
+                    self.__updateLightsScreen()
+                elif (SCREENS[self.screen]["type"] == 1):
+                    self.__updateMediaScreen()
 
     def run(self) -> None:
         if (self.screen == None): return
