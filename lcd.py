@@ -1,7 +1,5 @@
 from machine import Pin,SPI,PWM
-from font import Font
-from utils import Utils
-import framebuf
+from framebuf import FrameBuffer, RGB565
 
 BL = 13
 DC = 8
@@ -11,7 +9,7 @@ SCK = 10
 CS = 9
 
 # LCD driver
-class LCD(framebuf.FrameBuffer):
+class LCD(FrameBuffer):
     def __init__(self):
         pwm = PWM(Pin(BL))
         pwm.freq(1000)
@@ -30,14 +28,8 @@ class LCD(framebuf.FrameBuffer):
         self.dc = Pin(DC,Pin.OUT)
         self.dc(1)
         self.buffer = bytearray(self.height * self.width * 2)
-        super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)
+        super().__init__(self.buffer, self.width, self.height, RGB565)
         self.init_display()
-        
-        self.red   =   0x07E0
-        self.green =   0x001f
-        self.blue  =   0xf800
-        self.white =   0xffff
-        self.black =   0x0000
 
         self.keyA = {
             "v": False, # value
@@ -194,6 +186,3 @@ class LCD(framebuf.FrameBuffer):
         self.spi.write(self.buffer)
         self.cs(1)
     # END OF DRIVER
-
-    def clear(self, c):
-        self.fill(c)
