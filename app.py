@@ -244,8 +244,9 @@ class App:
         started = False
         while (True):
             gc.collect()
+            if (time.localtime()[3] == 0): ntptime.settime()
             changed = not started or self.__changeScreen()
-            # TODO: make screen not change within given interval, as holding button too long changes it twice
+            # TODO: make buttons not work until certain delay after release, as holding button too long actions it twice
             if (not started): started = True
             # if the screen has changed, redraw the whole screen
             if (changed):
