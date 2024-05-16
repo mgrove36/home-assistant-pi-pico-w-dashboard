@@ -212,15 +212,28 @@ class App:
     def __handleMediaScreenButtons(self) -> bool:
         up = self.lcd.up["v"]
         down = self.lcd.down["v"]
+        keyA = self.lcd.keyA["v"]
+        keyX = self.lcd.keyX["v"]
+        keyY = self.lcd.keyY["v"]
         self.lcd.up["v"] = False
         self.lcd.down["v"] = False
+        self.lcd.keyA["v"] = False
+        self.lcd.keyX["v"] = False
+        self.lcd.keyY["v"] = False
         a = False
+        e = SCREENS[self.screen]["entity"]
         if (up):
-            self.api.changeVolume(SCREENS[self.screen]["entity"])
+            self.api.changeVolume(e)
             a = True
         elif (down):
-            self.api.changeVolume(SCREENS[self.screen]["entity"], False)
+            self.api.changeVolume(e, False)
             a = True
+        if (keyX):
+            self.api.nextTrack(e)
+        elif (keyY):
+            self.api.prevTrack(e)
+        if (keyA):
+            self.api.playPause(e)
         return a
         # if (a): self.__handleMediaScreenButtons()
 

@@ -70,6 +70,15 @@ class Api:
         else: dir = "down"
         self.__post(f"/api/services/media_player/volume_{dir}", {"entity_id": entity_id})
         self.__post(f"/api/services/media_player/volume_{dir}", {"entity_id": entity_id})
+    
+    def nextTrack(self, entity_id: str) -> None:
+        self.__post("/api/services/media_player/media_next_track", {"entity_id": entity_id})
+    
+    def prevTrack(self, entity_id: str) -> None:
+        self.__post("/api/services/media_player/media_previous_track", {"entity_id": entity_id})
+
+    def playPause(self, entity_id: str) -> None:
+        self.__post("/api/services/media_player/media_play_pause", {"entity_id": entity_id})
 
     def toggleLight(self, entity_id: str) -> None:
-        self.__post(f"/api/services/light/toggle", {"entity_id": entity_id})
+        self.__post("/api/services/light/toggle", {"entity_id": entity_id})
