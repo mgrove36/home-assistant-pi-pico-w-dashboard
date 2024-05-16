@@ -115,7 +115,8 @@ class LightsScreen(Screen):
         # display up to four lights as defined in env.py
         # for each defined entity (up to a max total of 4), display its data in a 2x2 grid
         for i in range(0, len(self.d)):
-            self.__displayLightEntity(lcd, i, lcd.width//2, lcd.height//2, lcd.width//2 * (i % 2), lcd.height//2 * (i//2), self.es[i]["name"], self.d[i])
+            h = lcd.height - 30
+            self.__displayLightEntity(lcd, i, lcd.width//2, h//2, lcd.width//2 * (i % 2), h//2 * (i//2) + 30, self.es[i]["name"], self.d[i])
         lcd.show()
     
     def __displayLightEntity(self, lcd, i: int, w: int, h: int, xo: int, yo: int, n: str, d) -> None:
@@ -163,7 +164,8 @@ class LightsScreen(Screen):
         for i in range(0, len(self.d)):
             # if its settings have changed, re-draw them without clearing the display
             if (self.d[i] != self.prev[i]):
-                self.__displayLightEntity(lcd, i, lcd.width//2, lcd.height//2, lcd.width//2 * (i % 2), lcd.height//2 * (i//2), self.es[i]["name"], self.d[i])
+                h = lcd.height - 30
+                self.__displayLightEntity(lcd, i, lcd.width//2, h//2, lcd.width//2 * (i % 2), h//2 * (i//2) + 30, self.es[i]["name"], self.d[i])
         lcd.show()
 
     def _updateData(self) -> dict:
