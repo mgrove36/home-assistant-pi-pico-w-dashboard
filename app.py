@@ -1,6 +1,6 @@
 from machine import reset
 from network import WLAN, STA_IF
-from time import sleep, localtime
+from time import sleep, localtime, time
 from lcd import LCD
 from font import cntr_st
 from gc import collect, mem_free
@@ -16,6 +16,7 @@ class App:
             self.scr_n = -1
         else: self.scr_n = 0
         self.lcd = LCD()
+        self.last_cng = 0
     
     def __connect(self) -> int:
         wlan = WLAN(STA_IF)
@@ -43,15 +44,15 @@ class App:
             pass
 
     def __resetButtonStatuses(self) -> None:
-        self.lcd.keyA["v"] = False
-        self.lcd.keyB["v"] = False
-        self.lcd.keyX["v"] = False
-        self.lcd.keyY["v"] = False
-        self.lcd.left["v"] = False
-        self.lcd.right["v"] = False
-        self.lcd.up["v"] = False
-        self.lcd.down["v"] = False
-        self.lcd.ctrl["v"] = False
+        if (self.lcd.keyA["v"]): self.lcd.keyA["v"] = False
+        if (self.lcd.keyB["v"]): self.lcd.keyB["v"] = False
+        if (self.lcd.keyX["v"]): self.lcd.keyX["v"] = False
+        if (self.lcd.keyY["v"]): self.lcd.keyY["v"] = False
+        if (self.lcd.left["v"]): self.lcd.left["v"] = False
+        if (self.lcd.right["v"]): self.lcd.right["v"] = False
+        if (self.lcd.up["v"]): self.lcd.up["v"] = False
+        if (self.lcd.down["v"]): self.lcd.down["v"] = False
+        if (self.lcd.ctrl["v"]): self.lcd.ctrl["v"] = False
 
     def __manageButtons(self) -> None:
         while (True):
@@ -102,9 +103,10 @@ class App:
                 self.scr_n -= 1
         self.lcd.left["v"] = False
         self.lcd.right["v"] = False
+        if (c): self.last_cng = time()
         return c
 
-    def handleButtons(self) -> bool:
+    def handleButtons(self, o: bool = True) -> bool:
         up = self.lcd.up["v"]
         down = self.lcd.down["v"]
         left = self.lcd.left["v"]
@@ -115,12 +117,18 @@ class App:
         keyX = self.lcd.keyX["v"]
         keyY = self.lcd.keyY["v"]
         self.__resetButtonStatuses()
-        if (ctrl):
-            reset()
-        return self.s.handleButtons(up, down, left, right, keyA, keyB, keyX, keyY, ctrl)
+        if (o):
+            c = self.s.handleButtons(up, down, left, right, keyA, keyB, keyX, keyY, ctrl)
+            if (c): self.last_cng = time()
+            return c
+        c = up or down or left or right or keyA or keyB or keyX or keyY or ctrl
+        if (c): self.last_cng = time()
+        return c
 
     def __manageScreen(self) -> None:
         started = False
+        active = True
+        self.last_cng = time()
         while (True):
             print("Mem free before and after collecting:")
             print(mem_free())
@@ -131,24 +139,40 @@ class App:
                     settime()
                 except:
                     pass
-            changed = not started or self.__changeScreen()
-            if (not started): started = True
-            # if the screen has changed, redraw the whole screen
-            if (changed):
-                self.__resetButtonStatuses()
-                collect()
-                if (SCREENS[self.scr_n]["type"] == 0):
-                    self.s = LightsScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entities"])
-                elif (SCREENS[self.scr_n]["type"] == 1):
-                    self.s = MediaScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entity"])
+            if (active and time() - self.last_cng > 15):
+                LCD.setDuty(0)
+                active = False
+            elif (active):
+                if (self.lcd.ctrl["v"]):
+                    LCD.setDuty(0)
+                    active = False
+                    self.lcd.ctrl["v"] = False
+                    continue
+                changed = not started or self.__changeScreen()
+                # if the screen has changed, redraw the whole screen
+                if (changed):
+                    self.last_cng = time()
+                    if (not started): started = True
+                    self.__resetButtonStatuses()
+                    collect()
+                    if (SCREENS[self.scr_n]["type"] == 0):
+                        self.s = LightsScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entities"])
+                    elif (SCREENS[self.scr_n]["type"] == 1):
+                        self.s = MediaScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entity"])
+                    else:
+                        self.s = UnknownScreen("Unknown")
+                    self.s.display(self.lcd)
+                # otherwise minimise the number of pixels being changed
                 else:
-                    self.s = UnknownScreen("Unknown")
-                self.s.display(self.lcd)
-            # otherwise minimise the number of pixels being changed
+                    b = self.handleButtons()
+                    if (b):
+                        self.last_cng = time()
+                        continue
+                    self.s.update(self.lcd)
             else:
-                b = self.handleButtons()
-                if (b): continue
-                self.s.update(self.lcd)
+                if (self.handleButtons(False)):
+                    LCD.setDuty()
+                    active = True
 
     def run(self) -> None:
         if (self.scr_n == None): return

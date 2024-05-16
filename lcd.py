@@ -7,13 +7,14 @@ RST = 12
 MOSI = 11
 SCK = 10
 CS = 9
+DUTY = 32768
 
 # LCD driver
 class LCD(FrameBuffer):
     def __init__(self):
         pwm = PWM(Pin(BL))
         pwm.freq(1000)
-        pwm.duty_u16(32768)
+        pwm.duty_u16(DUTY)
 
         self.width = 240
         self.height = 240
@@ -186,3 +187,8 @@ class LCD(FrameBuffer):
         self.spi.write(self.buffer)
         self.cs(1)
     # END OF DRIVER
+
+    @staticmethod
+    def setDuty(v: int = DUTY):
+        pwm = PWM(Pin(BL))
+        pwm.duty_u16(v)
