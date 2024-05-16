@@ -1,4 +1,4 @@
-from utils import Utils
+from utils import colour
 
 # ===========Start of FONTS Section=========================
 # Standard ASCII 5x8 font
@@ -264,51 +264,46 @@ FONT = bytes([
     0x00, 0x00, 0x00, 0x00, 0x00  # 255 also a <space>
 ])
 
-class Font:
-    @staticmethod
-    def character(lcd,asc,xt,yt,sz,r,g,b):  # Single character sz is size: 1 or 2
-        cc = Utils.colour(r,g,b)
-        code = asc * 5    # 5 bytes per character
-        for ii in range(5):
-            line = FONT[code + ii]
-            for yy in range(8):
-                if (line >> yy) & 0x1:
-                    lcd.pixel(ii*sz+xt,yy*sz+yt,cc) 
-                    if sz > 1:
-                        lcd.pixel(ii*sz+xt+1,yy*sz+yt,cc)
-                        lcd.pixel(ii*sz+xt,yy*sz+yt+1,cc)
-                        lcd.pixel(ii*sz+xt+1,yy*sz+yt+1,cc)
-                    if sz == 3:
-                        lcd.pixel(ii*sz+xt,  yy*sz+yt+2,cc)
-                        lcd.pixel(ii*sz+xt+1,yy*sz+yt+2,cc)
-                        lcd.pixel(ii*sz+xt+2,yy*sz+yt+2,cc)
-                        lcd.pixel(ii*sz+xt+2,yy*sz+yt,cc)
-                        lcd.pixel(ii*sz+xt+2,yy*sz+yt+1,cc)
+def character(lcd,asc,xt,yt,sz,r,g,b):  # Single character sz is size: 1 or 2
+    cc = colour(r,g,b)
+    code = asc * 5    # 5 bytes per character
+    for ii in range(5):
+        line = FONT[code + ii]
+        for yy in range(8):
+            if (line >> yy) & 0x1:
+                lcd.pixel(ii*sz+xt,yy*sz+yt,cc) 
+                if sz > 1:
+                    lcd.pixel(ii*sz+xt+1,yy*sz+yt,cc)
+                    lcd.pixel(ii*sz+xt,yy*sz+yt+1,cc)
+                    lcd.pixel(ii*sz+xt+1,yy*sz+yt+1,cc)
+                if sz == 3:
+                    lcd.pixel(ii*sz+xt,  yy*sz+yt+2,cc)
+                    lcd.pixel(ii*sz+xt+1,yy*sz+yt+2,cc)
+                    lcd.pixel(ii*sz+xt+2,yy*sz+yt+2,cc)
+                    lcd.pixel(ii*sz+xt+2,yy*sz+yt,cc)
+                    lcd.pixel(ii*sz+xt+2,yy*sz+yt+1,cc)
 
-    @staticmethod
-    def prnt_st(lcd,asci,xx,yy,sz,r,g,b):  # Text string
-        if sz == 1: move = 6
-        if sz == 2: move = 11
-        if sz == 3: move = 17 
-        for letter in(asci):
-            asci = ord(letter)
-            Font.character(lcd,asci,xx,yy,sz,r,g,b)
-            xx = xx + move
+def prnt_st(lcd,asci,xx,yy,sz,r,g,b):  # Text string
+    if sz == 1: move = 6
+    if sz == 2: move = 11
+    if sz == 3: move = 17 
+    for letter in(asci):
+        asci = ord(letter)
+        character(lcd,asci,xx,yy,sz,r,g,b)
+        xx = xx + move
 
-    @staticmethod
-    def cntr_st(lcd,width,txt,y,size,r,g,b,o=0): # Centres text on line y, skipping first o pixels
-        if size == 1: w = 6
-        if size == 2: w = 11
-        if size == 3: w = 17 
-        gap = (width - len(txt) * w)//2 + o
-        Font.prnt_st(lcd,txt,gap,y,size,r,g,b)
+def cntr_st(lcd,width,txt,y,size,r,g,b,o=0): # Centres text on line y, skipping first o pixels
+    if size == 1: w = 6
+    if size == 2: w = 11
+    if size == 3: w = 17 
+    gap = (width - len(txt) * w)//2 + o
+    prnt_st(lcd,txt,gap,y,size,r,g,b)
 
-    @staticmethod
-    def rght_st(lcd,asci,xx,yy,sz,r,g,b):
-        if sz == 1: w = 6
-        if sz == 2: w = 11
-        if sz == 3: w = 17
-        xo = xx - len(asci) * w
-        Font.prnt_st(lcd,asci,xo,yy,sz,r,g,b)
+def rght_st(lcd,asci,xx,yy,sz,r,g,b):
+    if sz == 1: w = 6
+    if sz == 2: w = 11
+    if sz == 3: w = 17
+    xo = xx - len(asci) * w
+    prnt_st(lcd,asci,xo,yy,sz,r,g,b)
 
 # =========== End of font support routines ===========

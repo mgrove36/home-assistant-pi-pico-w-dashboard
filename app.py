@@ -1,14 +1,12 @@
-from api import Api
-import machine
-import network
-from time import sleep
+from machine import reset
+from network import WLAN, STA_IF
+from time import sleep, localtime
 from lcd import LCD
-from font import Font
-import gc
-from env import *
-import _thread
-import ntptime
-import time
+from font import cntr_st
+from gc import collect, mem_free
+from env import HOSTNAME, SSID, WIFI_PASSWORD, SCREENS
+from _thread import start_new_thread
+from ntptime import settime
 from screens import *
 
 class App:
@@ -18,10 +16,9 @@ class App:
             self.scr_n = -1
         else: self.scr_n = 0
         self.lcd = LCD()
-        self.api = Api(HASS_URL, TOKEN)
     
     def __connect(self) -> int:
-        wlan = network.WLAN(network.STA_IF)
+        wlan = WLAN(STA_IF)
         wlan.active(True)
         wlan.config(hostname=HOSTNAME)
         wlan.connect(SSID, WIFI_PASSWORD)
@@ -33,16 +30,15 @@ class App:
         return self.ip
 
     def __boot(self) -> None:
-        gc.collect()
+        collect()
         print("Booting")
-        self.lcd.fill(self.lcd.black)
-        Font.cntr_st(self.lcd, self.lcd.width, "Booting...", 120, 2, 150, 150, 150)
+        self.lcd.fill(0x0000)
+        cntr_st(self.lcd, self.lcd.width, "Booting...", 120, 2, 150, 150, 150)
         self.lcd.show()
         self.__connect()
-        ntptime.host = "1.europe.pool.ntp.org"
         try:
-            ntptime.settime()
-            print("Local time after synchronization: %s" %str(time.localtime()))
+            settime()
+            print("Local time after synchronization: %s" %str(localtime()))
         except:
             pass
 
@@ -109,7 +105,7 @@ class App:
         print(f"Screen change: {c}")
         return c
 
-    def handleButtons(self):
+    def handleButtons(self) -> bool:
         up = self.lcd.up["v"]
         down = self.lcd.down["v"]
         left = self.lcd.left["v"]
@@ -119,27 +115,21 @@ class App:
         keyB = self.lcd.keyB["v"]
         keyX = self.lcd.keyX["v"]
         keyY = self.lcd.keyY["v"]
-        # self.lcd.up["v"] = False
-        # self.lcd.down["v"] = False
-        # self.lcd.left["v"] = False
-        # self.lcd.right["v"] = False
-        # self.lcd.ctrl["v"] = False
-        # self.lcd.keyA["v"] = False
-        # self.lcd.keyB["v"] = False
-        # self.lcd.keyX["v"] = False
-        # self.lcd.keyY["v"] = False
         self.__resetButtonStatuses()
         if (ctrl):
-            machine.reset()
-        self.s.handleButtons(up, down, left, right, keyA, keyB, keyX, keyY, ctrl)
+            reset()
+        return self.s.handleButtons(up, down, left, right, keyA, keyB, keyX, keyY, ctrl)
 
     def __manageScreen(self) -> None:
         started = False
         while (True):
-            gc.collect()
-            if (time.localtime()[3] == 0):
+            print("Mem free before and after collecting:")
+            print(mem_free())
+            collect()
+            print(mem_free())
+            if (localtime()[3] == 0):
                 try:
-                    ntptime.settime()
+                    settime()
                 except:
                     pass
             changed = not started or self.__changeScreen()
@@ -147,13 +137,13 @@ class App:
             # if the screen has changed, redraw the whole screen
             if (changed):
                 self.__resetButtonStatuses()
-                gc.collect()
+                collect()
                 if (SCREENS[self.scr_n]["type"] == 0):
-                    self.s = LightsScreen(self.api, SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entities"])
+                    self.s = LightsScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entities"])
                 elif (SCREENS[self.scr_n]["type"] == 1):
-                    self.s = MediaScreen(self.api, SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entity"])
+                    self.s = MediaScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entity"])
                 else:
-                    self.s = UnknownScreen(self.api, -1, "Unknown")
+                    self.s = UnknownScreen("Unknown")
                 self.s.display(self.lcd)
             # otherwise minimise the number of pixels being changed
             else:
@@ -165,7 +155,7 @@ class App:
         if (self.scr_n == None): return
         self.__boot()
         try:
-            _thread.start_new_thread(self.__manageButtons, ())
+            start_new_thread(self.__manageButtons, ())
             self.__manageScreen()
         except KeyboardInterrupt:
-            machine.reset()
+            reset()

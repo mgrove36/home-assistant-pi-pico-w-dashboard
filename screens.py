@@ -1,17 +1,17 @@
-from font import Font
-from utils import Utils
-import bmp_file_reader as bmpr
+from font import cntr_st, rght_st
+from utils import colour
+from bmp_file_reader import BMPFileReader
+from api import getMediaPlayerData, getLightData, playPause, nextTrack, prevTrack, changeVolume, setVolume, toggleLight, setBrightness
 
 class Screen():
-    def __init__(self, api, n: str) -> None:
-        self.api = api
+    def __init__(self, n: str) -> None:
         self.name = n
         self.d = {}
         self.prev = {}
 
     def display(self, lcd) -> None:
-        lcd.fill(lcd.black)
-        Font.cntr_st(lcd, lcd.width, self.name, 20, 2, 255, 255, 255)
+        lcd.fill(0x0000)
+        cntr_st(lcd, lcd.width, self.name, 20, 2, 255, 255, 255)
 
     def update(self, lcd) -> None:
         pass
@@ -20,15 +20,16 @@ class Screen():
         return False
     
     def _updateData(self) -> dict:
+        self.prev = self.d.copy()
         return {}
 
     def _invalidConfig(self, lcd) -> None:
-        Font.cntr_st(lcd, lcd.width, "Invalid config", lcd.height//2, 2, 255, 255, 255)
+        cntr_st(lcd, lcd.width, "Invalid config", lcd.height//2, 2, 255, 255, 255)
         lcd.show()
 
 class MediaScreen(Screen):
-    def __init__(self, api, n: str, e: str) -> None:
-        super().__init__(api, n)
+    def __init__(self, n: str, e: str) -> None:
+        super().__init__(n)
         self.e = e
         self.valid = e != None and e != ""
     
@@ -43,20 +44,20 @@ class MediaScreen(Screen):
         if (self.d["media_duration"] != None):
             mins = self.d["media_duration"] // 60
             secs = self.d["media_duration"] % 60
-            Font.rght_st(lcd, f"{mins}:{secs}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
-        Font.cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
-        Font.cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 96, 2, 255, 255, 255)
+            rght_st(lcd, f"{mins}:{secs}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
+        cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
+        cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 96, 2, 255, 255, 255)
         lcd.show()
     
     def __updateMediaPositionBar(self, lcd, p: int, d: int):
         if (d > 0):
             for x in range (0, (lcd.width * p)//d):
-                lcd.pixel(x, lcd.height - 5, lcd.white)
-                lcd.pixel(x, lcd.height - 4, lcd.white)
-                lcd.pixel(x, lcd.height - 3, lcd.white)
-                lcd.pixel(x, lcd.height - 2, lcd.white)
-                lcd.pixel(x, lcd.height - 1, lcd.white)
-                lcd.pixel(x, lcd.height, lcd.white)
+                lcd.pixel(x, lcd.height - 5, 0xffff)
+                lcd.pixel(x, lcd.height - 4, 0xffff)
+                lcd.pixel(x, lcd.height - 3, 0xffff)
+                lcd.pixel(x, lcd.height - 2, 0xffff)
+                lcd.pixel(x, lcd.height - 1, 0xffff)
+                lcd.pixel(x, lcd.height, 0xffff)
 
     def update(self, lcd):
         if (not self.valid):
@@ -73,29 +74,34 @@ class MediaScreen(Screen):
             self.display(lcd)
 
     def _updateData(self) -> dict:
-        self.prev = self.d
-        self.d = self.api.getMediaPlayerData(self.e)
+        super()._updateData()
+        self.d = getMediaPlayerData(self.e)
         return self.d
     
     def handleButtons(self, up: bool, down: bool, left: bool, right: bool, keyA: bool, keyB: bool, keyX: bool, keyY: bool, ctrl: bool) -> bool:
         a = False
-        if (up):
-            self.api.changeVolume(self.e)
+        v = self.d["volume_level"] if "volume_level" in self.d else None
+        if (v != None and up and v < 1):
+            vn = min(1.0, v + 0.08)
+            setVolume(self.e, vn)
+            self.d["volume_level"] = vn
             a = True
-        elif (down):
-            self.api.changeVolume(self.e, False)
+        elif (v != None and down and v > 0.01):
+            vn = max(0.01, v - 0.08)
+            setVolume(self.e, vn)
+            self.d["volume_level"] = vn
             a = True
         if (keyX):
-            self.api.nextTrack(self.e)
+            nextTrack(self.e)
         elif (keyY):
-            self.api.prevTrack(self.e)
+            prevTrack(self.e)
         if (keyA):
-            self.api.playPause(self.e)
+            playPause(self.e)
         return a
 
 class LightsScreen(Screen):
-    def __init__(self, api, n: str, es: list) -> None:
-        super().__init__(api, n)
+    def __init__(self, n: str, es: list) -> None:
+        super().__init__(n)
         self.es = es
         self.valid = es != None and len(es) != 0
     
@@ -115,9 +121,9 @@ class LightsScreen(Screen):
     def __displayLightEntity(self, lcd, i: int, w: int, h: int, xo: int, yo: int, n: str, d) -> None:
         # if the light is turned on, display the filled-in lightbulb icon in the colour of the light, centrally in the light's grid square
         if (d["on"]):
-            color = Utils.colour(d["rgb_color"][0], d["rgb_color"][1], d["rgb_color"][2])
+            color = colour(d["rgb_color"][0], d["rgb_color"][1], d["rgb_color"][2])
             with open("images/lightbulb-on.bmp", "rb") as file_handle:
-                reader = bmpr.BMPFileReader(file_handle)
+                reader = BMPFileReader(file_handle)
                 img_height = reader.get_height()
                 x_offset = w//2 + xo - reader.get_width()//2
                 y_offset = h//2 + yo - reader.get_height()//2 - 4
@@ -128,12 +134,14 @@ class LightsScreen(Screen):
                         g = d["rgb_color"][1] if (color.green) != 0 else 0
                         b = d["rgb_color"][2] if (color.blue) != 0 else 0
                         if (color.red != 0 or color.green != 0 or color.blue != 0):
-                            lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(r,g,b))
+                            lcd.pixel(col_i + x_offset, row_i + y_offset, colour(r,g,b))
         # otherwise display the outline lightbulb icon in grey, centrally in the light's grid square
         else:
-            color = Utils.colour(80, 80, 80)
+            color = colour(80, 80, 80)
+            print("Drawing light off")
             with open("images/lightbulb-off.bmp", "rb") as file_handle:
-                reader = bmpr.BMPFileReader(file_handle)
+                reader = BMPFileReader(file_handle)
+                print("Drawing light off - loaded file")
                 img_height = reader.get_height()
                 x_offset = w//2 + xo - reader.get_width()//2
                 y_offset = h//2 + yo - reader.get_height()//2 - 4
@@ -141,11 +149,11 @@ class LightsScreen(Screen):
                     row = reader.get_row(row_i)
                     for col_i, color in enumerate(row):
                         if (color.red != 0 or color.green != 0 or color.blue != 0):
-                            lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(color.red, color.green, color.blue))
+                            lcd.pixel(col_i + x_offset, row_i + y_offset, colour(color.red, color.green, color.blue))
                         else:
-                            lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(0,0,0))
+                            lcd.pixel(col_i + x_offset, row_i + y_offset, colour(0,0,0))
         # display the name of the light 8px below the lightbulb icon
-        Font.cntr_st(lcd, w, n, y_offset + img_height + 8, 2, 220, 220, 220, xo)
+        cntr_st(lcd, w, n, y_offset + img_height + 8, 2, 220, 220, 220, xo)
 
     def update(self, lcd):
         if (not self.valid):
@@ -153,6 +161,7 @@ class LightsScreen(Screen):
             self._invalidConfig(lcd)
             return
         self._updateData()
+        print("Updating lights")
         # for each light to be displayed
         for i in range(0, len(self.d)):
             # if its settings have changed, re-draw them without clearing the display
@@ -161,9 +170,9 @@ class LightsScreen(Screen):
         lcd.show()
 
     def _updateData(self) -> dict:
-        self.prev = self.d
+        super()._updateData()
         for i in range(0, min(len(self.es), 4)):
-            self.d[i] = self.api.getLightData(self.es[i]["id"])
+            self.d[i] = getLightData(self.es[i]["id"])
         return self.d
     
     def handleButtons(self, up: bool, down: bool, left: bool, right: bool, keyA: bool, keyB: bool, keyX: bool, keyY: bool, ctrl: bool) -> bool:
@@ -173,21 +182,21 @@ class LightsScreen(Screen):
         for i in range(0, e):
             # if button for light clicked, toggle the light
             if (b[i]):
-                self.api.toggleLight(self.es[i]["id"])
+                toggleLight(self.es[i]["id"])
                 a = True
             # if up/down clicked, adjust brightness for all lights that are turned on
             pcfg = i in self.prev and "on" in self.prev[i] and self.prev[i]["on"] and "brightness" in self.prev[i]
             if (up and pcfg):
-                self.api.setBrightness(self.es[i]["id"], min(255, self.prev[i]["brightness"] + 35))
+                setBrightness(self.es[i]["id"], min(255, self.prev[i]["brightness"] + 35))
                 a = True
             elif (down and pcfg):
-                self.api.setBrightness(self.es[i]["id"], max(1, self.prev[i]["brightness"] - 35))
+                setBrightness(self.es[i]["id"], max(1, self.prev[i]["brightness"] - 35))
                 a = True
         return a
     
 class UnknownScreen(Screen):
-    def __init__(self, api, t: int, n: str) -> None:
-        super().__init__(api, t, n)
+    def __init__(self, n: str) -> None:
+        super().__init__(n)
     
     def display(self, lcd) -> None:
         super().display(lcd)
