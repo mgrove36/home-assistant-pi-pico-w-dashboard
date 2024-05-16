@@ -17,6 +17,7 @@ class App:
         else: self.scr_n = 0
         self.lcd = LCD()
         self.last_cng = 0
+        self.must_draw = False
     
     def __connect(self) -> int:
         wlan = WLAN(STA_IF)
@@ -161,14 +162,17 @@ class App:
                         self.s = MediaScreen(SCREENS[self.scr_n]["name"], SCREENS[self.scr_n]["entity"])
                     else:
                         self.s = UnknownScreen("Unknown")
-                    self.s.display(self.lcd)
+                    self.must_draw = self.s.display(self.lcd)
                 # otherwise minimise the number of pixels being changed
                 else:
                     b = self.handleButtons()
                     if (b):
                         self.last_cng = time()
                         continue
-                    self.s.update(self.lcd)
+                    if (self.must_draw):
+                        self.s.display(self.lcd)
+                    else:
+                        self.s.update(self.lcd)
             else:
                 if (self.handleButtons(False)):
                     LCD.setDuty()

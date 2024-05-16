@@ -1,4 +1,4 @@
-from font import cntr_st, rght_st
+from font import cntr_st, rght_st, sz_to_w
 from utils import colour
 from bmp_file_reader import BMPFileReader
 from api import getMediaPlayerData, getLightData, playPause, nextTrack, prevTrack, changeVolume, setVolume, toggleLight, setBrightness
@@ -9,9 +9,10 @@ class Screen():
         self.d = {}
         self.prev = {}
 
-    def display(self, lcd) -> None:
+    def display(self, lcd) -> bool:
         lcd.fill(0x0000)
         cntr_st(lcd, lcd.width, self.name, 20, 2, 255, 255, 255)
+        return False
 
     def update(self, lcd) -> None:
         pass
@@ -32,12 +33,13 @@ class MediaScreen(Screen):
         super().__init__(n)
         self.e = e
         self.valid = e != None and e != ""
+        self.m_t = -1
     
-    def display(self, lcd) -> None:
+    def display(self, lcd) -> bool:
         super().display(lcd)
         if (not self.valid):
             self._invalidConfig(lcd)
-            return
+            return False
         if (self.d == {}):
             self.d = self._updateData()
         y_offset = 62
@@ -64,10 +66,21 @@ class MediaScreen(Screen):
             mins = self.d["media_duration"] // 60
             secs = self.d["media_duration"] % 60
             rght_st(lcd, f"{mins}:{secs}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
-        cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
+        cs = lcd.width//sz_to_w(3)
+        l = len(self.d["media_title"]) > cs
+        if (l):
+            if (self.m_t + cs > len(self.d["media_title"])):
+                self.m_t = 0
+            else:
+                self.m_t += 1
+            cntr_st(lcd, lcd.width, self.d["media_title"][self.m_t:self.m_t + cs], lcd.height - 72, 3, 255, 255, 255)
+        else:
+            self.m_t = -1
+            cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
         cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 98, 2, 255, 255, 255)
         lcd.show()
-    
+        return l
+
     def __updateMediaPositionBar(self, lcd, p: int, d: int):
         if (d > 0):
             for x in range (0, (lcd.width * p)//d):
@@ -124,11 +137,11 @@ class LightsScreen(Screen):
         self.es = es
         self.valid = es != None and len(es) != 0
     
-    def display(self, lcd) -> None:
+    def display(self, lcd) -> bool:
         super().display(lcd)
         if (not self.valid):
             self._invalidConfig(lcd)
-            return
+            return False
         if (self.d == {}):
             self._updateData()
         # display up to four lights as defined in env.py
@@ -137,6 +150,7 @@ class LightsScreen(Screen):
             h = lcd.height - 30
             self.__displayLightEntity(lcd, i, lcd.width//2, h//2, lcd.width//2 * (i % 2), h//2 * (i//2) + 30, self.es[i]["name"], self.d[i])
         lcd.show()
+        return False
     
     def __displayLightEntity(self, lcd, i: int, w: int, h: int, xo: int, yo: int, n: str, d) -> None:
         # if the light is turned on, display the filled-in lightbulb icon in the colour of the light, centrally in the light's grid square
