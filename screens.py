@@ -40,13 +40,32 @@ class MediaScreen(Screen):
             return
         if (self.d == {}):
             self.d = self._updateData()
+        y_offset = 62
+        if (self.d["playing"]):
+            with open("images/play.bmp", "rb") as file_handle:
+                reader = BMPFileReader(file_handle)
+                x_offset = lcd.width//2 - reader.get_width()//2
+                for row_i in range(0, reader.get_height()):
+                    row = reader.get_row(row_i)
+                    for col_i, color in enumerate(row):
+                        if (color.red != 0 or color.green != 0 or color.blue != 0):
+                            lcd.pixel(col_i + x_offset, row_i + y_offset, 0xffff)
+        else:
+            with open("images/pause.bmp", "rb") as file_handle:
+                reader = BMPFileReader(file_handle)
+                x_offset = lcd.width//2 - reader.get_width()//2
+                for row_i in range(0, reader.get_height()):
+                    row = reader.get_row(row_i)
+                    for col_i, color in enumerate(row):
+                        if (color.red != 0 or color.green != 0 or color.blue != 0):
+                            lcd.pixel(col_i + x_offset, row_i + y_offset, 0xffff)
         self.__updateMediaPositionBar(lcd, self.d["media_position"], self.d["media_duration"])
         if (self.d["media_duration"] != None):
             mins = self.d["media_duration"] // 60
             secs = self.d["media_duration"] % 60
             rght_st(lcd, f"{mins}:{secs}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
         cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
-        cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 96, 2, 255, 255, 255)
+        cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 98, 2, 255, 255, 255)
         lcd.show()
     
     def __updateMediaPositionBar(self, lcd, p: int, d: int):
@@ -66,7 +85,7 @@ class MediaScreen(Screen):
             return
         self._updateData()
         # if same media is playing (same title and duration), just update the position bar
-        if (self.d["media_title"] == self.prev["media_title"] and self.d["media_duration"] == self.prev["media_duration"]):
+        if (self.d["media_title"] == self.prev["media_title"] and self.d["media_duration"] == self.prev["media_duration"] and self.d["playing"] == self.prev["playing"]):
             self.__updateMediaPositionBar(lcd, self.d["media_position"], self.d["media_duration"])
             lcd.show()
         # otherwise redraw the whole screen
