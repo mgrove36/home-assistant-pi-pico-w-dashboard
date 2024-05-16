@@ -177,13 +177,25 @@ class App:
             # if its settings have changed, re-draw them without clearing the display
             d = self.api.getLightData(SCREENS[self.screen]["entities"][i]["id"])
             if (d != self.scr_vals[i]):
-                self.__displayLightEntity(i, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2 * (i % 2), self.lcd.height//2 * (i//2), SCREENS[self.screen]["entities"][i]["name"], d[i])
+                self.__displayLightEntity(i, self.lcd.width//2, self.lcd.height//2, self.lcd.width//2 * (i % 2), self.lcd.height//2 * (i//2), SCREENS[self.screen]["entities"][i]["name"], d)
         # TODO: double button press to select a light, then up/down to change brightness? and single button click to turn on/off?
         self.lcd.show()
 
     def __handleLightsScreenButtons(self) -> bool:
         # TODO: reset buttons used
-        return False
+        b = [self.lcd.keyA["v"], self.lcd.keyB["v"], self.lcd.keyX["v"], self.lcd.keyY["v"]]
+        self.lcd.keyA["v"] = False
+        self.lcd.keyB["v"] = False
+        self.lcd.keyX["v"] = False
+        self.lcd.keyY["v"] = False
+        e = min(len(SCREENS[self.screen]["entities"]), 4)
+        a = False
+        for i in range(0, e):
+            # if button for light clicked, toggle the light
+            if (b[i]):
+                self.api.toggleLight(SCREENS[self.screen]["entities"][i]["id"])
+                a = True
+        return a
 
     def __updateMediaScreen(self) -> None:
         d = self.api.getMediaPlayerData(SCREENS[self.screen]["entity"])
