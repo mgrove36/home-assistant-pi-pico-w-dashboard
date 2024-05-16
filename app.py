@@ -2,7 +2,7 @@ from api import Api
 import machine
 import network
 from time import sleep
-from screen import LCD
+from lcd import LCD
 from font import Font
 import gc
 from env import *
