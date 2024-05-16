@@ -119,6 +119,8 @@ class App:
                     for col_i, color in enumerate(row):
                         if (color.red != 0 or color.green != 0 or color.blue != 0):
                             self.lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(color.red, color.green, color.blue))
+                        else:
+                            self.lcd.pixel(col_i + x_offset, row_i + y_offset, Utils.colour(0,0,0))
         # display the name of the light 8px below the lightbulb icon
         Font.cntr_st(self.lcd, w, n, y_offset + img_height + 8, 2, 220, 220, 220, xo)
     
