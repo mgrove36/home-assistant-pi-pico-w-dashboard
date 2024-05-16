@@ -1,4 +1,4 @@
-from requests import get
+from requests import get, post
 import gc
 import time
 
@@ -17,6 +17,17 @@ class Api:
         print("Starting request for " + endpoint)
         response = get(url, headers=headers)
         return response.json()
+
+    def __post(self, endpoint, d) -> bool:
+        gc.collect()
+        url = self.base_url + endpoint
+        headers = {
+            "Authorization": "Bearer " + self.access_token,
+            "content-type": "application/json"
+        }
+        print("Starting post request to " + endpoint)
+        response = post(url, headers=headers, json=d)
+        return response.status_code == 200
     
     def getLightData(self, entity_id: str) -> dict:
         # TODO: error handling if can't access hass (e.g. no connection, invalid token)
@@ -38,8 +49,6 @@ class Api:
             p = 0
         if ("media_position_updated_at" in (dict)(response["attributes"])):
             dts = response["attributes"]["media_position_updated_at"]
-            # p += (datetime.now() - datetime.strptime(dts, "%Y-%m-%dT%H:%M:%S.%f%z")).total_seconds()
-            print(dts)
             t = time.mktime((int(dts[0:4]), int(dts[5:7]), int(dts[8:10]), int(dts[11:13]) + int(dts[27:29]), int(dts[14:16]) + int(dts[30:31]), int(dts[17:19]), 0, 0))
             p += time.mktime(time.localtime()) - t
         return {
@@ -55,3 +64,9 @@ class Api:
             "media_artist": response["attributes"]["media_artist"] if "media_artist" in (dict)(response["attributes"]) else "",
             "media_album_name": response["attributes"]["media_album_name"] if "media_album_name" in (dict)(response["attributes"]) else ""
         }
+    
+    def changeVolume(self, entity_id: str, up: bool = True) -> None:
+        if (up): dir = "up"
+        else: dir = "down"
+        self.__post(f"/api/services/media_player/volume_{dir}", {"entity_id": entity_id})
+        self.__post(f"/api/services/media_player/volume_{dir}", {"entity_id": entity_id})
