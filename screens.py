@@ -182,12 +182,16 @@ class LightsScreen(Screen):
                 toggleLight(self.es[i]["id"])
                 a = True
             # if up/down clicked, adjust brightness for all lights that are turned on
-            pcfg = i in self.prev and "on" in self.prev[i] and self.prev[i]["on"] and "brightness" in self.prev[i]
+            pcfg = i in self.d and "on" in self.d[i] and self.d[i]["on"] and "brightness" in self.d[i]
             if (up and pcfg):
-                setBrightness(self.es[i]["id"], min(255, self.prev[i]["brightness"] + 35))
+                v = min(255, self.d[i]["brightness"] + 35)
+                setBrightness(self.es[i]["id"], v)
+                self.d[i]["brightness"] = v
                 a = True
             elif (down and pcfg):
-                setBrightness(self.es[i]["id"], max(1, self.prev[i]["brightness"] - 35))
+                v = max(1, self.d[i]["brightness"] - 35)
+                setBrightness(self.es[i]["id"], v)
+                self.d[i]["brightness"] = v                
                 a = True
         return a
     
