@@ -9,7 +9,7 @@ def getReq(endpoint) -> dict:
         "Authorization": "Bearer " + TOKEN,
         "content-type": "application/json"
     }
-    print("Starting request for " + endpoint)
+    print("GET " + endpoint)
     try:
         response = get(HASS_URL + endpoint, headers=headers)
         return response.json()
@@ -22,7 +22,7 @@ def postReq(endpoint, d) -> bool:
         "Authorization": "Bearer " + TOKEN,
         "content-type": "application/json"
     }
-    print("Starting post request to " + endpoint)
+    print("POST " + endpoint)
     try:
         response = post(HASS_URL + endpoint, headers=headers, json=d)
         return response.status_code == 200

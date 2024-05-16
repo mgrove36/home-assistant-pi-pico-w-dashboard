@@ -138,10 +138,8 @@ class LightsScreen(Screen):
         # otherwise display the outline lightbulb icon in grey, centrally in the light's grid square
         else:
             color = colour(80, 80, 80)
-            print("Drawing light off")
             with open("images/lightbulb-off.bmp", "rb") as file_handle:
                 reader = BMPFileReader(file_handle)
-                print("Drawing light off - loaded file")
                 img_height = reader.get_height()
                 x_offset = w//2 + xo - reader.get_width()//2
                 y_offset = h//2 + yo - reader.get_height()//2 - 4
@@ -161,7 +159,6 @@ class LightsScreen(Screen):
             self._invalidConfig(lcd)
             return
         self._updateData()
-        print("Updating lights")
         # for each light to be displayed
         for i in range(0, len(self.d)):
             # if its settings have changed, re-draw them without clearing the display

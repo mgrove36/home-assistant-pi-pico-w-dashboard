@@ -102,7 +102,6 @@ class App:
                 self.scr_n -= 1
         self.lcd.left["v"] = False
         self.lcd.right["v"] = False
-        print(f"Screen change: {c}")
         return c
 
     def handleButtons(self) -> bool:
