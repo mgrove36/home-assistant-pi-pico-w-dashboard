@@ -284,26 +284,26 @@ def character(lcd,asc,xt,yt,sz,r,g,b):  # Single character sz is size: 1 or 2
                     lcd.pixel(ii*sz+xt+2,yy*sz+yt+1,cc)
 
 def prnt_st(lcd,asci,xx,yy,sz,r,g,b):  # Text string
-    if sz == 1: move = 6
-    if sz == 2: move = 11
-    if sz == 3: move = 17 
+    move = sz_to_w(sz)
     for letter in(asci):
         asci = ord(letter)
         character(lcd,asci,xx,yy,sz,r,g,b)
         xx = xx + move
 
 def cntr_st(lcd,width,txt,y,size,r,g,b,o=0): # Centres text on line y, skipping first o pixels
-    if size == 1: w = 6
-    if size == 2: w = 11
-    if size == 3: w = 17 
+    w = sz_to_w(size)
     gap = (width - len(txt) * w)//2 + o
     prnt_st(lcd,txt,gap,y,size,r,g,b)
 
 def rght_st(lcd,asci,xx,yy,sz,r,g,b):
-    if sz == 1: w = 6
-    if sz == 2: w = 11
-    if sz == 3: w = 17
+    w = sz_to_w(sz)
     xo = xx - len(asci) * w
     prnt_st(lcd,asci,xo,yy,sz,r,g,b)
 
 # =========== End of font support routines ===========
+
+def sz_to_w(sz: int) -> int:
+    if (sz == 1): return 6
+    if (sz == 2): return 11
+    if (sz == 3): return 17
+    return 6
