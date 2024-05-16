@@ -276,7 +276,3 @@ class App:
             self.__manageScreen()
         except KeyboardInterrupt:
             machine.reset()
-
-if __name__ == "__main__":
-    app = App()
-    app.run()
