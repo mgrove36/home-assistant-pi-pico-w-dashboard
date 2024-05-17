@@ -1,7 +1,7 @@
 from font import cntr_st, rght_st, sz_to_w
 from utils import colour
 from bmp_file_reader import BMPFileReader
-from api import getMediaPlayerData, getLightData, playPause, nextTrack, prevTrack, changeVolume, setVolume, toggleLight, setBrightness
+from api import getMediaPlayerData, getLightData, playPause, nextTrack, prevTrack, setVolume, toggleLight, setBrightness
 
 class Screen():
     def __init__(self, n: str) -> None:

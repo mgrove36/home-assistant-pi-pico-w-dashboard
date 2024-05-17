@@ -69,12 +69,6 @@ def getMediaPlayerData(entity_id: str) -> dict:
         "media_album_name": response["attributes"]["media_album_name"] if e and "media_album_name" in (dict)(response["attributes"]) else ""
     }
 
-def changeVolume(entity_id: str, up: bool = True) -> None:
-    if (up): dir = "up"
-    else: dir = "down"
-    postReq(f"/api/services/media_player/volume_{dir}", {"entity_id": entity_id})
-    postReq(f"/api/services/media_player/volume_{dir}", {"entity_id": entity_id})
-
 def setVolume(entity_id: str, v: float) -> None:
     postReq(f"/api/services/media_player/volume_set", {"entity_id": entity_id, "volume_level": v})
 
