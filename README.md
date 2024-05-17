@@ -121,3 +121,25 @@ SCREENS = [
     }
 ]
 ```
+
+# Usage
+
+Once the software has been installed as per [the instructions above](#installation), it will run whenever the Pico W is provided with power.
+
+From any screen, left and right on the joystick will switch dashboard in either direction. The control button (press in on the joystick) will enable sleep mode. Sleep mode is also automatically enabled after 15 seconds of inactivity. The Pico W can be woken from sleep mode by pressing any button. Other buttons' functions depend on the dashboard type.
+
+## Lights dashboards
+
+- Up and down on the joystick changes the brightness of all switched-on lights by ±13.7% (35/255).
+- Button A toggles the first light (top-left in the grid).
+- Button B toggles the second light (top-right in the grid).
+- Button X toggles the third light (bottom-left in the grid).
+- Button Y toggles the fourth light (bottom-right in the grid).
+
+## Media dashboards
+
+- Up and down on the joystick changes the volume by ±8%.
+- Button A plays/pauses the media player.
+- Button B has no effect.
+- Button X skips to the next track.
+- Button Y skips to the previous track.
