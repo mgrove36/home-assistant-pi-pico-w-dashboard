@@ -34,6 +34,7 @@ class MediaScreen(Screen):
         self.e = e
         self.valid = e != None and e != ""
         self.m_t = -1
+        self.m_a = -1
     
     def display(self, lcd) -> bool:
         super().display(lcd)
@@ -66,20 +67,29 @@ class MediaScreen(Screen):
             mins = self.d["media_duration"] // 60
             secs = self.d["media_duration"] % 60
             rght_st(lcd, f"{mins}:{secs}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
-        cs = lcd.width//sz_to_w(3)
-        l = len(self.d["media_title"]) > cs
-        if (l):
-            if (self.m_t + cs > len(self.d["media_title"])):
+        mt_cs = lcd.width//sz_to_w(3)
+        mt_l = len(self.d["media_title"]) > mt_cs
+        if (mt_l):
+            if (self.m_t + mt_cs > len(self.d["media_title"])):
                 self.m_t = 0
             else:
                 self.m_t += 1
-            cntr_st(lcd, lcd.width, self.d["media_title"][self.m_t:self.m_t + cs], lcd.height - 72, 3, 255, 255, 255)
+            cntr_st(lcd, lcd.width, self.d["media_title"][self.m_t:self.m_t + mt_cs], lcd.height - 72, 3, 255, 255, 255)
         else:
             self.m_t = -1
             cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
-        cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 98, 2, 255, 255, 255)
+        ma_cs = lcd.width//sz_to_w(2)
+        ma_l = len(self.d["media_artist"]) > ma_cs
+        if (ma_l):
+            if (self.m_a + ma_cs > len(self.d["media_artist"])):
+                self.m_a = 0
+            else:
+                self.m_a += 1
+            cntr_st(lcd, lcd.width, self.d["media_artist"][self.m_a:self.m_a + ma_cs], lcd.height - 98, 2, 255, 255, 255)
+        else:
+            cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 98, 2, 255, 255, 255)
         lcd.show()
-        return l
+        return mt_l or ma_l
 
     def __updateMediaPositionBar(self, lcd, p: int, d: int):
         if (d > 0):
