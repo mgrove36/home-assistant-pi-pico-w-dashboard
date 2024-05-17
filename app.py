@@ -131,10 +131,7 @@ class App:
         active = True
         self.last_cng = time()
         while (True):
-            print("Mem free before and after collecting:")
-            print(mem_free())
             collect()
-            print(mem_free())
             if (localtime()[3] == 0):
                 try:
                     settime()
@@ -170,9 +167,9 @@ class App:
                         self.last_cng = time()
                         continue
                     if (self.must_draw):
-                        self.s.display(self.lcd)
+                        self.must_draw = self.s.display(self.lcd)
                     else:
-                        self.s.update(self.lcd)
+                        self.must_draw = self.s.update(self.lcd)
             else:
                 if (self.handleButtons(False)):
                     LCD.setDuty()

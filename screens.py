@@ -14,8 +14,8 @@ class Screen():
         cntr_st(lcd, lcd.width, self.name, 20, 2, 255, 255, 255)
         return False
 
-    def update(self, lcd) -> None:
-        pass
+    def update(self, lcd) -> bool:
+        return False
 
     def handleButtons(self, up: bool, down: bool, left: bool, right: bool, keyA: bool, keyB: bool, keyX: bool, keyY: bool, ctrl: bool) -> bool:
         return False
@@ -101,19 +101,20 @@ class MediaScreen(Screen):
                 lcd.pixel(x, lcd.height - 1, 0xffff)
                 lcd.pixel(x, lcd.height, 0xffff)
 
-    def update(self, lcd):
+    def update(self, lcd) -> bool:
         if (not self.valid):
             super().display(lcd)
             self._invalidConfig(lcd)
-            return
+            return False
         self._updateData()
         # if same media is playing (same title and duration), just update the position bar
         if (self.d["media_title"] == self.prev["media_title"] and self.d["media_duration"] == self.prev["media_duration"] and self.d["playing"] == self.prev["playing"]):
             self.__updateMediaPositionBar(lcd, self.d["media_position"], self.d["media_duration"])
             lcd.show()
+            return False
         # otherwise redraw the whole screen
         else:
-            self.display(lcd)
+            return self.display(lcd)
 
     def _updateData(self) -> dict:
         super()._updateData()
@@ -197,11 +198,11 @@ class LightsScreen(Screen):
         # display the name of the light 8px below the lightbulb icon
         cntr_st(lcd, w, n, y_offset + img_height + 8, 2, 220, 220, 220, xo)
 
-    def update(self, lcd):
+    def update(self, lcd) -> bool:
         if (not self.valid):
             super().display(lcd)
             self._invalidConfig(lcd)
-            return
+            return False
         self._updateData()
         # for each light to be displayed
         for i in range(0, len(self.d)):
@@ -210,6 +211,7 @@ class LightsScreen(Screen):
                 h = lcd.height - 30
                 self.__displayLightEntity(lcd, i, lcd.width//2, h//2, lcd.width//2 * (i % 2), h//2 * (i//2) + 30, self.es[i]["name"], self.d[i])
         lcd.show()
+        return False
 
     def _updateData(self) -> dict:
         super()._updateData()
@@ -244,12 +246,13 @@ class UnknownScreen(Screen):
     def __init__(self, n: str) -> None:
         super().__init__(n)
     
-    def display(self, lcd) -> None:
+    def display(self, lcd) -> bool:
         super().display(lcd)
         self._invalidConfig(lcd)
+        return False
     
-    def update(self, lcd) -> None:
-        pass
+    def update(self, lcd) -> bool:
+        return False
 
     def _updateData(self) -> dict:
         return {}
