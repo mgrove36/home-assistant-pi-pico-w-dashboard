@@ -89,7 +89,10 @@ class MediaScreen(Screen):
         else:
             cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 98, 2, 255, 255, 255)
         lcd.show()
-        return mt_l or ma_l
+        if (mt_l or ma_l):
+            self.d = {}
+            return True
+        return False
 
     def __updateMediaPositionBar(self, lcd, p: int, d: int):
         if (d > 0):
