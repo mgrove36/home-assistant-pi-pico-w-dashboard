@@ -136,6 +136,10 @@ From any screen, left and right on the joystick will switch dashboard in either 
 - Button X toggles the third light (bottom-left in the grid).
 - Button Y toggles the fourth light (bottom-right in the grid).
 
+When a light is enabled, its icon will be filled-in and coloured with the light's current colour.
+
+![A lights dashboard](docs/lights.jpg)
+
 ## Media dashboards
 
 - Up and down on the joystick changes the volume by ±8%.
@@ -143,3 +147,8 @@ From any screen, left and right on the joystick will switch dashboard in either 
 - Button B has no effect.
 - Button X skips to the next track.
 - Button Y skips to the previous track.
+
+If the media title or artist is too long to fit on the display, the text will scroll to show the full information.
+
+![A media dashboard](docs/media_1.jpg)
+![A media dashboard with scrolling text](docs/media_2.jpg)
