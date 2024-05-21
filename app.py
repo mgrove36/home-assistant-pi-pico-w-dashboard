@@ -118,13 +118,12 @@ class App:
         keyX = self.lcd.keyX["v"]
         keyY = self.lcd.keyY["v"]
         self.__resetButtonStatuses()
+        a = up or down or left or right or keyA or keyB or keyX or keyY or ctrl
+        if (a): self.last_cng = time()
         if (o):
             c = self.s.handleButtons(up, down, left, right, keyA, keyB, keyX, keyY, ctrl)
-            if (c): self.last_cng = time()
             return c
-        c = up or down or left or right or keyA or keyB or keyX or keyY or ctrl
-        if (c): self.last_cng = time()
-        return c
+        return a
 
     def __manageScreen(self) -> None:
         started = False
@@ -171,6 +170,7 @@ class App:
                     else:
                         self.must_draw = self.s.update(self.lcd)
             else:
+                sleep(0.2)
                 if (self.handleButtons(False)):
                     LCD.setDuty()
                     active = True

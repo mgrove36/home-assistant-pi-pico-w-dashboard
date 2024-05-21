@@ -11,7 +11,7 @@ def getReq(endpoint) -> dict:
     }
     print("GET " + endpoint)
     try:
-        response = get(HASS_URL + endpoint, headers=headers)
+        response = get(HASS_URL + endpoint, headers=headers, timeout=2)
         return response.json()
     except:
         return {}
@@ -24,7 +24,7 @@ def postReq(endpoint, d) -> bool:
     }
     print("POST " + endpoint)
     try:
-        response = post(HASS_URL + endpoint, headers=headers, json=d)
+        response = post(HASS_URL + endpoint, headers=headers, json=d, timeout=2)
         return response.status_code == 200
     except:
         return False
