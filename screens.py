@@ -33,8 +33,7 @@ class MediaScreen(Screen):
         super().__init__(n)
         self.e = e
         self.valid = e != None and e != ""
-        self.m_t = -1
-        self.m_a = -1
+        self.str_start_i = [-1, -1, -1]
     
     def display(self, lcd) -> bool:
         super().display(lcd)
@@ -64,32 +63,44 @@ class MediaScreen(Screen):
                             lcd.pixel(col_i + x_offset, row_i + y_offset, 0xffff)
         self.__updateMediaPositionBar(lcd, self.d["media_position"], self.d["media_duration"])
         if (self.d["media_duration"] != None):
-            mins = self.d["media_duration"] // 60
-            secs = self.d["media_duration"] % 60
-            rght_st(lcd, f"{mins}:{secs}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
-        mt_cs = lcd.width//sz_to_w(3)
-        mt_l = len(self.d["media_title"]) > mt_cs
-        if (mt_l):
-            if (self.m_t + mt_cs > len(self.d["media_title"])):
-                self.m_t = 0
+            mins = int(self.d["media_duration"] // 60)
+            secs = int(self.d["media_duration"] % 60)
+            rght_st(lcd, f"{mins}:{secs:02}", lcd.width, lcd.height - 16, 1, 180, 180, 180)
+
+        txts = [
+            {
+                "s": "S" + str(self.d["media_season"]) + " E" + str(self.d["media_episode"]) if self.d["media_content_type"] == "tvshow" else self.d["media_album_name"],
+                "sz": 2,
+                "o": 106
+            },
+            {
+                "s": self.d["media_series_title"] if self.d["media_content_type"] == "tvshow" else self.d["media_artist"],
+                "sz": 2,
+                "o": 82
+            },
+            {
+                "s": self.d["media_title"],
+                "sz": 3,
+                "o": 56
+            }
+        ]
+        scroll = False
+        for i, txt in enumerate(txts):
+            cs = lcd.width//sz_to_w(txt["sz"])
+            if (len(txt["s"]) > cs):
+                scroll = True
+                if (self.str_start_i[i] + cs >= len(txt["s"])):
+                    self.str_start_i[i] = 0
+                else:
+                    self.str_start_i[i] += 1
+                s = txt["s"][self.str_start_i[i]:self.str_start_i[i] + cs]
             else:
-                self.m_t += 1
-            cntr_st(lcd, lcd.width, self.d["media_title"][self.m_t:self.m_t + mt_cs], lcd.height - 72, 3, 255, 255, 255)
-        else:
-            self.m_t = -1
-            cntr_st(lcd, lcd.width, self.d["media_title"], lcd.height - 72, 3, 255, 255, 255)
-        ma_cs = lcd.width//sz_to_w(2)
-        ma_l = len(self.d["media_artist"]) > ma_cs
-        if (ma_l):
-            if (self.m_a + ma_cs > len(self.d["media_artist"])):
-                self.m_a = 0
-            else:
-                self.m_a += 1
-            cntr_st(lcd, lcd.width, self.d["media_artist"][self.m_a:self.m_a + ma_cs], lcd.height - 98, 2, 255, 255, 255)
-        else:
-            cntr_st(lcd, lcd.width, self.d["media_artist"], lcd.height - 98, 2, 255, 255, 255)
+                self.str_start_i[i] = -1
+                s = txt["s"]
+            cntr_st(lcd, lcd.width, s, lcd.height - txt["o"], txt["sz"], 255, 255, 255)
+
         lcd.show()
-        if (mt_l or ma_l):
+        if (scroll):
             self.d = {}
             return True
         return False

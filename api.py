@@ -61,10 +61,13 @@ def getMediaPlayerData(entity_id: str) -> dict:
         "shuffle": response["attributes"]["shuffle"] if e and "shuffle" in response["attributes"] else False,
         "repeat": response["attributes"]["repeat"] == "on" if e and "repeat" in response["attributes"] else False,
         "volume_level": response["attributes"]["volume_level"] if e and "volume_level" in response["attributes"] else 0,
-        "entity_picture": response["attributes"]["entity_picture"] if e and "entity_picture" in (dict)(response["attributes"]) else None,
+        "media_content_type": response["attributes"]["media_content_type"] if e and "media_content_type" in (dict)(response["attributes"]) else "music",
+        "media_series_title": response["attributes"]["media_series_title"] if e and "media_series_title" in (dict)(response["attributes"]) else "",
+        "media_season": response["attributes"]["media_season"] if e and "media_season" in (dict)(response["attributes"]) else "",
+        "media_episode": response["attributes"]["media_episode"] if e and "media_episode" in (dict)(response["attributes"]) else "",
         "media_duration": response["attributes"]["media_duration"] if e and "media_duration" in (dict)(response["attributes"]) else 0,
         "media_position": p,
-        "media_title": response["attributes"]["media_title"] if e and "media_title" in (dict)(response["attributes"]) else "Nothing playing",
+        "media_title": response["attributes"]["media_title"] if e and "media_title" in (dict)(response["attributes"]) else "Not playing",
         "media_artist": response["attributes"]["media_artist"] if e and "media_artist" in (dict)(response["attributes"]) else "",
         "media_album_name": response["attributes"]["media_album_name"] if e and "media_album_name" in (dict)(response["attributes"]) else ""
     }
