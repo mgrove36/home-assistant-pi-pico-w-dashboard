@@ -19,7 +19,7 @@
     git clone https://github.com/mgrove36/home-assistant-pi-pico-w-dashboard.git && cd home-assistant-pi-pico-w-dashboard
     ```
 
-3. Edit `env.py` in this directory to contain [your settings](#settings).
+3. Copy `env.sample.py` to `env.py` and edit it to contain [your settings](#settings).
 
 4. Plug in the Pico W using a USB to Micro USB cable, and start `rshell`:
 
